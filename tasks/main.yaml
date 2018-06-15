@@ -1,0 +1,15 @@
+---
+
+- name: Check network device OS
+  assert:
+    that: >
+      ansible_network_os == 'nxos' or
+      ansible_network_os == 'ios'
+    msg: "Network device OS not defined or not supported by this role: {{ ansible_network_os }}"
+
+- include_tasks: inner.yaml
+  loop: "{{ key_chains | dict2items }}"
+  loop_control:
+    loop_var: outer_item
+  when: key_chains is defined
+
