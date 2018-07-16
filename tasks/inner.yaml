@@ -1,23 +1,36 @@
 ---
 
-- name: Create key chains
+- name: Create key chains and add key number
   nxos_config:
     parents: "key chain {{ outer_item.key }}"
     lines:
       - "key {{ item.key_id }}"
-      - "key-string {{ item.key_string | default(omit) }}"
-    match: exact
   loop: "{{ outer_item.value.key_ids| flatten(levels=1) }}"
   when: >
     ansible_network_os == 'nxos' and
-    outer_item.value.state == 'present'    
+    outer_item.value.state == 'present'
+  tags:
+    - key_chain_config
+    - nxos
+
+- name: Add string to keys in the chain
+  nxos_config:
+    parents:
+      - "key chain {{ outer_item.key }}"
+      - "key {{ item.key_id }}"
+    lines:
+      - "key-string {{ item.key_string | default(omit) }}"
+  loop: "{{ outer_item.value.key_ids| flatten(levels=1) }}"
+  when: >
+    ansible_network_os == 'nxos' and
+    outer_item.value.state == 'present'
   tags:
     - key_chain_config
     - nxos
 
 - name: Delete key chains
   nxos_config:
-    parents: 
+    parents:
     lines:
       - "no key chain {{ outer_item.key }}"
   when: >
@@ -25,4 +38,4 @@
     outer_item.value.state == 'absent'
   tags:
     - key_chain_config
-    - nxos 
+    - nxos
